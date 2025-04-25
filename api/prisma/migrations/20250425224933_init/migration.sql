@@ -1,0 +1,5 @@
+-- CreateExtension
+CREATE EXTENSION IF NOT EXISTS "pg_trgm" WITH VERSION "1.4";
+
+-- CreateExtension
+CREATE EXTENSION IF NOT EXISTS "vector" WITH VERSION "0.7.0";

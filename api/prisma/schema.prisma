@@ -1,0 +1,37 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  extensions        = [vector(version: "0.7.0"), pg_trgm(version: "1.4")]
+  provider          = "postgresql"
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  url               = env("DATABASE_URL")
+}
+
+model CashAccount {
+  cashAccountId String   @id @default(uuid()) @db.Uuid
+  externalId    String   @db.VarChar(255)
+  name          String   @db.VarChar(255)
+  createdAt     DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @db.Timestamptz(6)
+
+  cashAccountHistory CashAccountHistory[]
+}
+
+model CashAccountHistory {
+  cashAccountHistoryId String                         @id @default(uuid()) @db.Uuid
+  cashAccountId        String                         @db.Uuid
+  balance              Float?
+  date                 DateTime                       @db.Timestamptz(6)
+  period               enum_ChatAccountHistory_period
+  createdAt            DateTime                       @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime                       @updatedAt @db.Timestamptz(6)
+
+  cashAccount CashAccount @relation(fields: [cashAccountId], references: [cashAccountId], onDelete: Cascade)
+}
+
+enum enum_ChatAccountHistory_period {
+  month
+}
