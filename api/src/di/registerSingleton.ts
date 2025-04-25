@@ -1,6 +1,6 @@
 import { container } from "tsyringe";
 import { singletons } from "../shared/index.js";
-import { YnabSdk } from "../infra/index.js";
+import { CashAccountRepo, YnabSdk } from "../infra/index.js";
 
 type DIDecorator = {
   path: symbol;
@@ -14,9 +14,19 @@ const sdksToDecorate: DIDecorator[] = [
   },
 ];
 
+const reposToDecorate: DIDecorator[] = [
+  {
+    path: singletons.repo.cashAccount,
+    clazz: CashAccountRepo,
+  },
+];
+
 export async function registerSingletons(rootContainer: typeof container) {
   sdksToDecorate.forEach((sdk) => {
     registerWithDecorator(rootContainer, sdk);
+  });
+  reposToDecorate.forEach((repo) => {
+    registerWithDecorator(rootContainer, repo);
   });
 }
 

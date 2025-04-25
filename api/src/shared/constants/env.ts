@@ -3,4 +3,8 @@ export const env = {
   provider: {
     ynab: Symbol("provider.ynab"),
   },
+  repo: {
+    cashAccount: Symbol("repo.cashAccount"),
+    cashAccountHistory: Symbol("repo.cashAccountHistory"),
+  },
 };
