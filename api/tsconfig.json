@@ -5,7 +5,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "inlineSources": true,
-    "lib": ["ES2024"],
+    "lib": ["ES2023", "DOM"],
     "module": "NodeNext",
     "moduleResolution": "nodenext",
     "noErrorTruncation": true,
@@ -18,16 +18,5 @@
     "target": "ESNext",
     "useUnknownInCatchVariables": false
   },
-  "exclude": [
-    "dist",
-    "node_modules",
-    "scripts",
-    "*.js",
-    "**/*.test.ts",
-    "**/generators/**/expandTypes.ts",
-    "**/generators/**/expandTypesParser.ts",
-    "**/generators/**/openAPI.ts",
-    "**/generators/**/operations.ts",
-    "**/*.tsx"
-  ]
+  "exclude": ["dist", "node_modules", "*.js", "**/*.test.ts"]
 }

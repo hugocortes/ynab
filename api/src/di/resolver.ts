@@ -12,4 +12,6 @@ export async function getRootContainer() {
     await registerEnv(rootContainer);
     await registerSingletons(rootContainer);
   }
+
+  return rootContainer;
 }
