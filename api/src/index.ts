@@ -2,13 +2,14 @@ import "reflect-metadata";
 import { getRootContainer } from "./di/resolver.js";
 import { YnabSdk } from "./infra/index.js";
 import { singletons } from "./shared/index.js";
+import { CashAccountFlow } from "./core/index.js";
 
 (async () => {
   const container = await getRootContainer();
 
-  const sdk = container.resolve<YnabSdk>(singletons.sdk.ynab);
+  const clazz = container.resolve<CashAccountFlow>(singletons.flow.cashAccount);
 
-  console.log(sdk);
+  await clazz.creteCashAccounts();
 
   return 0;
 })();

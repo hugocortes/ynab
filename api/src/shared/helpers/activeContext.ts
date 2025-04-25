@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import { inject, injectable, singleton } from "tsyringe";
 import { AsyncLocalStorage } from "node:async_hooks";
 
