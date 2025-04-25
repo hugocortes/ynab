@@ -1,0 +1,31 @@
+env:
+  es6: true
+  node: true
+extends:
+  - plugin:@typescript-eslint/recommended
+  - plugin:jest/recommended
+  - plugin:prettier/recommended
+globals:
+  Awaited: "readonly" # available on typescript 4.5
+  NodeJS: true # bug: https://github.com/Chatie/eslint-config/issues/45
+ignorePatterns:
+  - "**/*.gen.ts" # auto generated file
+  - dist/*
+  - node_modules/*
+parser: "@typescript-eslint/parser"
+parserOptions:
+  sourceType: module
+  ecmaVersion: latest
+plugins:
+  - "@typescript-eslint/eslint-plugin"
+  - jest
+  - prettier
+root: true
+rules:
+  no-undef: 2
+  prettier/prettier:
+    - error
+    - usePrettierrc: true
+settings:
+  jest:
+    version: 26

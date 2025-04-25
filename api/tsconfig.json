@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "declaration": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "inlineSources": true,
+    "lib": ["ES2024"],
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "noErrorTruncation": true,
+    "outDir": "dist",
+    "paths": {},
+    "resolveJsonModule": true,
+    "rootDir": "src",
+    "sourceMap": true,
+    "strict": true,
+    "target": "ESNext",
+    "useUnknownInCatchVariables": false
+  },
+  "exclude": [
+    "dist",
+    "node_modules",
+    "scripts",
+    "*.js",
+    "**/*.test.ts",
+    "**/generators/**/expandTypes.ts",
+    "**/generators/**/expandTypesParser.ts",
+    "**/generators/**/openAPI.ts",
+    "**/generators/**/operations.ts",
+    "**/*.tsx"
+  ]
+}
