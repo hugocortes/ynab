@@ -1,0 +1,26 @@
+cubes:
+  - name: CapitalAccount
+    sql_table: '"MoneyAccount"'
+
+    measures:
+      - name: count
+        sql: '"moneyAccountId"'
+        type: count
+
+    dimensions:
+      - name: moneyAccountId
+        sql: '"moneyAccountId"'
+        type: string
+        primaryKey: true
+
+      - name: externalId
+        sql: '"externalId"'
+        type: string
+
+      - name: name
+        sql: '"name"'
+        type: string
+
+      - name: type
+        sql: '"type"'
+        type: string
