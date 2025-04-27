@@ -25,4 +25,20 @@ export class YnabSdk {
     );
     return data;
   }
+
+  /**
+   * Amounts are returned in tenths of a cent.
+   *
+   * e.g. 10000 = $10.00
+   *
+   * Transactions are returned in ASC order.
+   */
+  async getTransactionsForAccount(budgetId: string, accountId: string) {
+    const { data } = await this.client.transactions.getTransactionsByAccount(
+      budgetId,
+      accountId
+    );
+
+    return data;
+  }
 }

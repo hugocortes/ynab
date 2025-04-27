@@ -1,10 +1,13 @@
 export const singletons = {
   flow: {
-    cashAccount: Symbol("flow.cashAccount"),
+    moneyAccount: Symbol("flow.moneyAccount"),
   },
   repo: {
-    cashAccount: Symbol("repo.cashAccount"),
-    cashAccountHistory: Symbol("repo.cashAccountHistory"),
+    moneyAccount: Symbol("repo.moneyAccount"),
+    moneyAccountAggregatedHistory: Symbol("repo.moneyAccountAggregatedHistory"),
+    moneyAccountCapitalFlowHistory: Symbol(
+      "repo.moneyAccountCapitalFlowHistory"
+    ),
   },
   sdk: {
     ynab: Symbol("sdk.ynab"),

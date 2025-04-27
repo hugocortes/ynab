@@ -1,7 +1,11 @@
 import { container } from "tsyringe";
 import { singletons } from "../shared/index.js";
-import { CashAccountRepo, YnabSdk } from "../infra/index.js";
-import { CashAccountFlow } from "../core/index.js";
+import {
+  MoneyAccountCapitalFlowHistoryRepo,
+  MoneyAccountRepo,
+  YnabSdk,
+} from "../infra/index.js";
+import { MoneyAccountFlow } from "../core/index.js";
 import { PrismaClient } from "@prisma/client";
 
 type DIDecorator = {
@@ -18,15 +22,19 @@ const sdksToDecorate: DIDecorator[] = [
 
 const reposToDecorate: DIDecorator[] = [
   {
-    path: singletons.repo.cashAccount,
-    clazz: CashAccountRepo,
+    path: singletons.repo.moneyAccount,
+    clazz: MoneyAccountRepo,
+  },
+  {
+    path: singletons.repo.moneyAccountCapitalFlowHistory,
+    clazz: MoneyAccountCapitalFlowHistoryRepo,
   },
 ];
 
 const flowsToDecorate: DIDecorator[] = [
   {
-    path: singletons.flow.cashAccount,
-    clazz: CashAccountFlow,
+    path: singletons.flow.moneyAccount,
+    clazz: MoneyAccountFlow,
   },
 ];
 

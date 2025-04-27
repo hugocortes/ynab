@@ -16,6 +16,7 @@
   },
   "author": "",
   "devDependencies": {
+    "@types/bluebird": "^3.5.42",
     "@types/express": "^5.0.1",
     "@typescript-eslint/eslint-plugin": "^8.31.0",
     "eslint": "^9.25.1",
@@ -32,6 +33,8 @@
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
+    "bluebird": "^3.7.2",
+    "date-fns": "^4.1.0",
     "express": "^5.1.0",
     "express-openapi": "^12.1.3",
     "reflect-metadata": "^0.2.2",
