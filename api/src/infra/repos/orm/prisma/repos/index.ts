@@ -1,2 +1,2 @@
-export * from "./MoneyAccountRepo.js";
-export * from "./MoneyAccountCapitalFlowHistoryRepo.js";
+export * from "./CapitalAccountRepo.js";
+export * from "./CapitalAccountFlowHistoryRepo.js";

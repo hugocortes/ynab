@@ -1,15 +1,15 @@
 import {
-  MoneyAccountAttr,
-  MoneyAccountCapitalFlowHistoryAttr,
+  CapitalAccountAttr,
+  CapitalAccountFlowHistoryAttr,
 } from "../../models/index.js";
 import { Timestamp } from "../../models/tables/common.js";
 
-export type MoneyAccountCreateRepoInput = Omit<
-  MoneyAccountAttr,
-  keyof Timestamp | "moneyAccountId"
+export type CapitalAccountCreateRepoInput = Omit<
+  CapitalAccountAttr,
+  keyof Timestamp | "capitalAccountId"
 >;
 
-export type MoneyAccountCapitalFlowHistoryRepoInput = Omit<
-  MoneyAccountCapitalFlowHistoryAttr,
-  keyof Timestamp | "moneyAccountCapitalFlowHistoryId"
+export type CapitalAccountFlowHistoryRepoInput = Omit<
+  CapitalAccountFlowHistoryAttr,
+  keyof Timestamp | "capitalAccountFlowHistoryId"
 >;

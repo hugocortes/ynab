@@ -1,11 +1,11 @@
 cube("CapitalFlow", {
-  sql_table: '"MoneyAccountCapitalFlowHistory"',
-  sql_alias: "macfh",
+  sql_table: '"CapitalAccountFlowHistory"',
+  sql_alias: "cafh",
 
   joins: {
     CapitalAccount: {
       relationship: "belongsTo",
-      sql: `${CapitalFlow}."moneyAccountId" = ${CapitalAccount}."moneyAccountId"`,
+      sql: `${CapitalFlow}."capitalAccountId" = ${CapitalAccount}."capitalAccountId"`,
     },
   },
 
@@ -49,14 +49,14 @@ cube("CapitalFlow", {
   },
 
   dimensions: {
-    moneyAccountCapitalFlowHistoryId: {
-      sql: '"moneyAccountCapitalFlowHistoryId"',
+    capitalAccountFlowHistoryId: {
+      sql: '"capitalAccountFlowHistoryId"',
       type: "string",
       primaryKey: true,
     },
 
-    moneyAccountId: {
-      sql: '"moneyAccountId"',
+    capitalAccountId: {
+      sql: '"capitalAccountId"',
       type: "string",
     },
 

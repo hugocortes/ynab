@@ -1,15 +1,15 @@
 cubes:
   - name: CapitalAccount
-    sql_table: '"MoneyAccount"'
+    sql_table: '"CapitalAccount"'
 
     measures:
       - name: count
-        sql: '"moneyAccountId"'
+        sql: '"capitalAccountId"'
         type: count
 
     dimensions:
-      - name: moneyAccountId
-        sql: '"moneyAccountId"'
+      - name: capitalAccountId
+        sql: '"capitalAccountId"'
         type: string
         primaryKey: true
 

@@ -4,7 +4,9 @@ export const env = {
     ynab: Symbol("provider.ynab"),
   },
   repo: {
-    moneyAccount: Symbol("repo.moneyAccount"),
-    moneyAccountAggregatedHistory: Symbol("repo.moneyAccountAggregatedHistory"),
+    capitalAccount: Symbol("repo.capitalAccount"),
+    capitalAccountAggregatedHistory: Symbol(
+      "repo.capitalAccountAggregatedHistory"
+    ),
   },
 };

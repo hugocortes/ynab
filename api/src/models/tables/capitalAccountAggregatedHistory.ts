@@ -1,31 +1,31 @@
 import { Timestamp } from "./common.js";
-import { MoneyAccountId } from "./moneyAccount.js";
+import { CapitalAccountId } from "./capitalAccount.js";
 
-export const moneyAccountAggregatedHistoryPeriod = ["month"] as const;
+export const capitalAccountAggregatedHistoryPeriod = ["month"] as const;
 /**
  * @api
  */
-export type MoneyAccountAggregatedHistoryPeriod = {
-  period: (typeof moneyAccountAggregatedHistoryPeriod)[number];
+export type CapitalAccountAggregatedHistoryPeriod = {
+  period: (typeof capitalAccountAggregatedHistoryPeriod)[number];
 };
 
 /**
  * @api
  */
-export type MoneyAccountAggregatedHistoryId = {
+export type CapitalAccountAggregatedHistoryId = {
   /**
    * @format uuid
    */
-  moneyAccountAggregatedHistoryId: string;
+  capitalAccountAggregatedHistoryId: string;
 };
 
 /**
  * @api
  */
-export type MoneyAccountAggregatedHistoryAttr =
-  MoneyAccountAggregatedHistoryId &
-    MoneyAccountId &
-    MoneyAccountAggregatedHistoryPeriod &
+export type CapitalAccountAggregatedHistoryAttr =
+  CapitalAccountAggregatedHistoryId &
+    CapitalAccountId &
+    CapitalAccountAggregatedHistoryPeriod &
     Timestamp & {
       /**
        * @description Represents the total balance of the account at the end of

@@ -1,3 +1,3 @@
-export * from "./moneyAccount.js";
-export * from "./moneyAccountAggregatedHistory.js";
-export * from "./moneyAccountCapitalFlowHistory.js";
+export * from "./capitalAccount.js";
+export * from "./capitalAccountAggregatedHistory.js";
+export * from "./capitalAccountFlowHistory.js";

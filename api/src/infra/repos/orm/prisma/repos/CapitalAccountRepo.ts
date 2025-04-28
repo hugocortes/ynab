@@ -1,17 +1,17 @@
 import { inject, injectable, singleton } from "tsyringe";
 import { PrismaClientManager } from "../PrismaClientManager.js";
-import { MoneyAccountCreateRepoInput } from "../../../../ports/repo.js";
+import { CapitalAccountCreateRepoInput } from "../../../../ports/repo.js";
 import {
-  MoneyAccountAttr,
-  MoneyAccountQuery,
-  MoneyAccountType,
+  CapitalAccountAttr,
+  CapitalAccountQuery,
+  CapitalAccountType,
   PaginationFilter,
 } from "../../../../../models/index.js";
 
 @injectable()
 @singleton()
-export class MoneyAccountRepo {
-  private readonly table = "moneyAccount";
+export class CapitalAccountRepo {
+  private readonly table = "capitalAccount";
 
   constructor(
     @inject(PrismaClientManager)
@@ -19,13 +19,13 @@ export class MoneyAccountRepo {
   ) {}
 
   async find(
-    filter: PaginationFilter<MoneyAccountQuery>
-  ): Promise<MoneyAccountAttr[]> {
+    filter: PaginationFilter<CapitalAccountQuery>
+  ): Promise<CapitalAccountAttr[]> {
     const prisma = this.prismaClientManager.getClient();
 
     const { pagination, query } = filter;
 
-    let where: Partial<MoneyAccountType> = {};
+    let where: Partial<CapitalAccountType> = {};
     if (query.type) {
       where.type = query.type;
     }
@@ -38,8 +38,8 @@ export class MoneyAccountRepo {
   }
 
   async create(
-    payload: MoneyAccountCreateRepoInput
-  ): Promise<MoneyAccountAttr> {
+    payload: CapitalAccountCreateRepoInput
+  ): Promise<CapitalAccountAttr> {
     const prisma = this.prismaClientManager.getClient();
 
     const row = await prisma[this.table].create({

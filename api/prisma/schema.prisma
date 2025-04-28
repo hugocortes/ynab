@@ -10,55 +10,55 @@ datasource db {
   url               = env("DATABASE_URL")
 }
 
-model MoneyAccount {
-  moneyAccountId String                 @id @default(uuid()) @db.Uuid
-  externalId     String                 @db.VarChar(255)
-  name           String                 @db.VarChar(255)
-  type           enum_MoneyAccount_type
-  createdAt      DateTime               @default(now()) @db.Timestamptz(6)
-  updatedAt      DateTime               @updatedAt @db.Timestamptz(6)
+model CapitalAccount {
+  capitalAccountId String                   @id @default(uuid()) @db.Uuid
+  externalId       String                   @db.VarChar(255)
+  name             String                   @db.VarChar(255)
+  type             enum_CapitalAccount_type
+  createdAt        DateTime                 @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime                 @updatedAt @db.Timestamptz(6)
 
-  moneyAccountAggregatedHistory  MoneyAccountAggregatedHistory[]
-  moneyAccountCapitalFlowHistory MoneyAccountCapitalFlowHistory[]
+  capitalAccountAggregatedHistory CapitalAccountAggregatedHistory[]
+  capitalAccountFlowHistory       CapitalAccountFlowHistory[]
 }
 
-model MoneyAccountAggregatedHistory {
-  moneyAccountAggregatedHistoryId String                                    @id @default(uuid()) @db.Uuid
-  moneyAccountId                  String                                    @db.Uuid
-  balance                         Float
-  date                            DateTime                                  @db.Timestamptz(6)
-  period                          enum_MoneyAccountAggregatedHistory_period
-  totalCapitalFlow                Float
-  totalInflow                     Float
-  totalOutflow                    Float
-  createdAt                       DateTime                                  @default(now()) @db.Timestamptz(6)
-  updatedAt                       DateTime                                  @updatedAt @db.Timestamptz(6)
+model CapitalAccountAggregatedHistory {
+  capitalAccountAggregatedHistoryId String                                      @id @default(uuid()) @db.Uuid
+  capitalAccountId                  String                                      @db.Uuid
+  balance                           Float
+  date                              DateTime                                    @db.Timestamptz(6)
+  period                            enum_CapitalAccountAggregatedHistory_period
+  totalCapitalFlow                  Float
+  totalInflow                       Float
+  totalOutflow                      Float
+  createdAt                         DateTime                                    @default(now()) @db.Timestamptz(6)
+  updatedAt                         DateTime                                    @updatedAt @db.Timestamptz(6)
 
-  moneyAccount MoneyAccount @relation(fields: [moneyAccountId], references: [moneyAccountId], onDelete: Cascade)
+  capitalAccount CapitalAccount @relation(fields: [capitalAccountId], references: [capitalAccountId], onDelete: Cascade)
 }
 
-model MoneyAccountCapitalFlowHistory {
-  moneyAccountCapitalFlowHistoryId String                                   @id @default(uuid()) @db.Uuid
-  moneyAccountId                   String                                   @db.Uuid
-  amount                           Float
-  date                             DateTime                                 @db.Timestamptz(6)
-  type                             enum_MoneyAccountCapitalFlowHistory_type
-  createdAt                        DateTime                                 @default(now()) @db.Timestamptz(6)
-  updatedAt                        DateTime                                 @updatedAt @db.Timestamptz(6)
+model CapitalAccountFlowHistory {
+  capitalAccountFlowHistoryId String                              @id @default(uuid()) @db.Uuid
+  capitalAccountId            String                              @db.Uuid
+  amount                      Float
+  date                        DateTime                            @db.Timestamptz(6)
+  type                        enum_CapitalAccountFlowHistory_type
+  createdAt                   DateTime                            @default(now()) @db.Timestamptz(6)
+  updatedAt                   DateTime                            @updatedAt @db.Timestamptz(6)
 
-  moneyAccount MoneyAccount @relation(fields: [moneyAccountId], references: [moneyAccountId], onDelete: Cascade)
+  capitalAccount CapitalAccount @relation(fields: [capitalAccountId], references: [capitalAccountId], onDelete: Cascade)
 }
 
-enum enum_MoneyAccount_type {
+enum enum_CapitalAccount_type {
   cash
   investment
 }
 
-enum enum_MoneyAccountAggregatedHistory_period {
+enum enum_CapitalAccountAggregatedHistory_period {
   month
 }
 
-enum enum_MoneyAccountCapitalFlowHistory_type {
+enum enum_CapitalAccountFlowHistory_type {
   income
   investmentContribution
   market

@@ -1,8 +1,8 @@
 import { inject, injectable, singleton } from "tsyringe";
 import { singletons } from "../../shared/index.js";
 import {
-  MoneyAccountCapitalFlowHistoryRepo,
-  MoneyAccountRepo,
+  CapitalAccountFlowHistoryRepo,
+  CapitalAccountRepo,
   YnabSdk,
 } from "../../infra/index.js";
 import { startOfDay } from "date-fns";
@@ -10,18 +10,18 @@ import bb from "bluebird";
 
 @injectable()
 @singleton()
-export class MoneyAccountFlow {
+export class CapitalAccountFlow {
   constructor(
-    @inject(singletons.repo.moneyAccount)
-    private readonly moneyAccountRepo: MoneyAccountRepo,
-    @inject(singletons.repo.moneyAccountCapitalFlowHistory)
-    private readonly moneyAccountCapitalFlowHistoryRepo: MoneyAccountCapitalFlowHistoryRepo,
+    @inject(singletons.repo.capitalAccount)
+    private readonly capitalAccountRepo: CapitalAccountRepo,
+    @inject(singletons.repo.capitalAccountFlowHistory)
+    private readonly capitalAccountFlowHistoryRepo: CapitalAccountFlowHistoryRepo,
 
     @inject(singletons.sdk.ynab)
     private readonly ynabSdk: YnabSdk
   ) {}
 
-  toMoneyAccountExternalId(budgetId: string, accountId: string) {
+  toCapitalAccountExternalId(budgetId: string, accountId: string) {
     return `urn:budget:${budgetId}:account:${accountId}`;
   }
 
@@ -39,7 +39,7 @@ export class MoneyAccountFlow {
     };
   }
 
-  async creteMoneyAccounts() {
+  async creteCapitalAccounts() {
     const {
       budgets: [budget],
     } = await this.ynabSdk.getBudgets({
@@ -57,12 +57,12 @@ export class MoneyAccountFlow {
     await Promise.all(
       cashAccounts.map(async (account) => {
         const payload = {
-          externalId: this.toMoneyAccountExternalId(budget.id, account.id),
+          externalId: this.toCapitalAccountExternalId(budget.id, account.id),
           name: account.name,
           type: "cash" as const,
         };
 
-        await this.moneyAccountRepo.create(payload);
+        await this.capitalAccountRepo.create(payload);
       })
     );
 
@@ -73,18 +73,18 @@ export class MoneyAccountFlow {
     await Promise.all(
       investmentAccounts.map(async (account) => {
         const payload = {
-          externalId: this.toMoneyAccountExternalId(budget.id, account.id),
+          externalId: this.toCapitalAccountExternalId(budget.id, account.id),
           name: account.name,
           type: "investment" as const,
         };
 
-        await this.moneyAccountRepo.create(payload);
+        await this.capitalAccountRepo.create(payload);
       })
     );
   }
 
-  async createMoneyAccountCapitalFlowHistory() {
-    const moneyAccounts = await this.moneyAccountRepo.find({
+  async createCapitalAccountFlowHistory() {
+    const capitalAccounts = await this.capitalAccountRepo.find({
       pagination: {},
       query: {
         type: "investment",
@@ -92,9 +92,9 @@ export class MoneyAccountFlow {
     });
 
     await bb.Promise.map(
-      moneyAccounts,
-      async (moneyAccount) => {
-        const { externalId, moneyAccountId } = moneyAccount;
+      capitalAccounts,
+      async (capitalAccount) => {
+        const { externalId, capitalAccountId } = capitalAccount;
 
         const { budgetId, accountId } = this.toBudgetIdentifiers(externalId);
 
@@ -109,18 +109,19 @@ export class MoneyAccountFlow {
 
             const isContribution =
               transaction.payee_name === "Starting Balance" ||
+              transaction.payee_name === "Reconciliation Balance Adjustment" ||
               !!transaction.transfer_account_id;
 
             const payload = {
               amount: transaction.amount / 1000,
               date: startOfDay(transactionDate),
-              moneyAccountId,
+              capitalAccountId,
               type: isContribution
                 ? ("investmentContribution" as const)
                 : ("market" as const),
             };
 
-            await this.moneyAccountCapitalFlowHistoryRepo.create(payload);
+            await this.capitalAccountFlowHistoryRepo.create(payload);
           })
         );
       },
