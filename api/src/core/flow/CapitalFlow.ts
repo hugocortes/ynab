@@ -5,7 +5,7 @@ import {
   CapitalAccountRepo,
   YnabSdk,
 } from "../../infra/index.js";
-import { startOfDay } from "date-fns";
+import { addHours } from "date-fns";
 import bb from "bluebird";
 
 @injectable()
@@ -106,15 +106,17 @@ export class CapitalAccountFlow {
         await Promise.all(
           transactions.transactions.map(async (transaction) => {
             const transactionDate = new Date(transaction.date);
+            const middleOfDay = addHours(transactionDate, 12);
 
             const isContribution =
               transaction.payee_name === "Starting Balance" ||
               transaction.payee_name === "Reconciliation Balance Adjustment" ||
+              transaction.payee_name?.toLowerCase().includes("contribution") || // custom name before YNAB tracking
               !!transaction.transfer_account_id;
 
             const payload = {
               amount: transaction.amount / 1000,
-              date: startOfDay(transactionDate),
+              date: middleOfDay,
               capitalAccountId,
               type: isContribution
                 ? ("investmentContribution" as const)
