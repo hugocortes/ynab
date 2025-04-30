@@ -50,35 +50,54 @@ export class CapitalAccountFlow {
       return;
     }
 
-    const cashAccountTypes = ["checking", "savings", "cash"];
-    const cashAccounts = budget.accounts.filter((account) =>
-      cashAccountTypes.includes(account.type)
-    );
     await Promise.all(
-      cashAccounts.map(async (account) => {
+      budget.accounts.map(async (account) => {
+        if (account.deleted) {
+          return;
+        }
+
+        const cashAccountTypes = ["checking", "savings", "cash"];
+        const investmentAccountTypes = ["otherAsset"];
+
+        const isCashAccount = cashAccountTypes.includes(account.type);
+        const isInvestmentAccount = investmentAccountTypes.includes(
+          account.type
+        );
+
+        const assetNames = ["home"];
+        const isAssetAccount =
+          isInvestmentAccount &&
+          assetNames.some((name) => account.name.toLowerCase().includes(name));
+
+        const debtAccountTypes = [
+          "personalLoan",
+          "autoLoan",
+          "otherDebt",
+          "lineOfCredit",
+        ];
+        const isDebtAccount = debtAccountTypes.includes(account.type);
+
         const payload = {
           externalId: this.toCapitalAccountExternalId(budget.id, account.id),
           name: account.name,
-          type: "cash" as const,
+          type: isAssetAccount
+            ? ("asset" as const)
+            : isCashAccount
+              ? ("cash" as const)
+              : isDebtAccount
+                ? ("debt" as const)
+                : isInvestmentAccount
+                  ? ("investment" as const)
+                  : undefined,
         };
+        if (!payload.type) {
+          return;
+        }
 
-        await this.capitalAccountRepo.create(payload);
-      })
-    );
-
-    const investmentAccountTypes = ["otherAsset"];
-    const investmentAccounts = budget.accounts.filter((account) =>
-      investmentAccountTypes.includes(account.type)
-    );
-    await Promise.all(
-      investmentAccounts.map(async (account) => {
-        const payload = {
-          externalId: this.toCapitalAccountExternalId(budget.id, account.id),
-          name: account.name,
-          type: "investment" as const,
-        };
-
-        await this.capitalAccountRepo.create(payload);
+        await this.capitalAccountRepo.create({
+          ...payload,
+          type: payload.type,
+        });
       })
     );
   }
@@ -126,6 +145,86 @@ export class CapitalAccountFlow {
             await this.capitalAccountFlowHistoryRepo.create(payload);
           })
         );
+      },
+      {
+        concurrency: 5,
+      }
+    );
+  }
+
+  async createCapitalAccountDebtHistory() {
+    const capitalAccounts = await this.capitalAccountRepo.find({
+      pagination: {},
+      query: {
+        type: "debt",
+      },
+    });
+
+    await bb.Promise.map(
+      capitalAccounts,
+      async (capitalAccount) => {
+        const { externalId, capitalAccountId } = capitalAccount;
+
+        const { budgetId, accountId } = this.toBudgetIdentifiers(externalId);
+
+        const transactions = await this.ynabSdk.getTransactionsForAccount(
+          budgetId,
+          accountId
+        );
+
+        const history = await Promise.all(
+          transactions.transactions.map(async (transaction, idx) => {
+            const transactionDate = new Date(transaction.date);
+            const middleOfDay = addHours(transactionDate, 12);
+
+            const isDebt =
+              transaction.debt_transaction_type === "charge" ||
+              transaction.debt_transaction_type === "balanceAdjustment" ||
+              transaction.debt_transaction_type === "credit" || // for stuff like returns
+              transaction.payee_name === "Starting Balance";
+
+            const isPayment =
+              transaction.debt_transaction_type === "payment" ||
+              !!transaction.transfer_transaction_id;
+
+            const payload = {
+              amount: transaction.amount / 1000,
+              date: middleOfDay,
+              capitalAccountId,
+              type: isDebt
+                ? ("debt" as const)
+                : isPayment
+                  ? ("debtPayment" as const)
+                  : undefined,
+            };
+            if (!payload.type) {
+              return;
+            }
+
+            return this.capitalAccountFlowHistoryRepo.create({
+              ...payload,
+              type: payload.type,
+            });
+          })
+        );
+
+        // create a final entry for interest if there is a positive balance
+        const totalAmount = history
+          .filter((entry) => !!entry)
+          .reduce((acc, entry) => acc + (entry.amount ?? 0), 0);
+        if (totalAmount > 0) {
+          const lastEntry = history[history.length - 1];
+
+          const transactionDate = new Date(lastEntry!.date);
+          const middleOfDay = addHours(transactionDate, 12);
+          const payload = {
+            amount: -totalAmount,
+            date: middleOfDay,
+            capitalAccountId,
+            type: "debt" as const,
+          };
+          await this.capitalAccountFlowHistoryRepo.create(payload);
+        }
       },
       {
         concurrency: 5,

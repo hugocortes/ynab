@@ -2,6 +2,8 @@ import { Timestamp } from "./common.js";
 import { CapitalAccountId } from "./capitalAccount.js";
 
 export const capitalAccountFlowHistoryType = [
+  "debt", // can be initial debt, debt adjustment, or debt interest
+  "debtPayment",
   "income",
   "investmentContribution",
   "market",

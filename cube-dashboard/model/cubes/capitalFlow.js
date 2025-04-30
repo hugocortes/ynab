@@ -10,40 +10,37 @@ cube("CapitalFlow", {
   },
 
   measures: {
-    contribution: {
+    balance: {
       sql: '"amount"',
       type: "sum",
-      filters: [
-        {
-          sql: `${CapitalFlow}.type = 'investmentContribution'`,
-        },
-      ],
       rolling_window: {
-        trailing: "1 month",
+        trailing: "unbounded",
         offset: "end",
       },
       format: "currency",
     },
 
-    currentMonthAmount: {
+    investmentContribution: {
+      sql: `"amount"`,
+      type: "sum",
+      filters: [
+        {
+          sql: `${CapitalFlow}."type" = 'investmentContribution'`,
+        },
+      ],
+      rolling_window: {
+        trailing: "unbounded",
+        offset: "end",
+      },
+      format: "currency",
+    },
+    monthAmount: {
       sql: '"amount"',
       type: "sum",
       rolling_window: {
         trailing: "1 month",
         offset: "end",
       },
-    },
-    previousMonthAmount: {
-      sql: '"amount"',
-      type: "sum",
-      rolling_window: {
-        trailing: "1 month",
-        offset: "start",
-      },
-    },
-    monthOverMonthAmount: {
-      sql: `${CUBE.currentMonthAmount} / ${CUBE.previousMonthAmount}`,
-      type: "number",
       format: "currency",
     },
   },
@@ -72,7 +69,7 @@ cube("CapitalFlow", {
     },
 
     type: {
-      sql: '"type"',
+      sql: `${CapitalFlow}."type"`,
       type: "string",
     },
   },

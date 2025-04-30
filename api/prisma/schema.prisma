@@ -50,7 +50,9 @@ model CapitalAccountFlowHistory {
 }
 
 enum enum_CapitalAccount_type {
+  asset
   cash
+  debt
   investment
 }
 
@@ -59,6 +61,8 @@ enum enum_CapitalAccountAggregatedHistory_period {
 }
 
 enum enum_CapitalAccountFlowHistory_type {
+  debt
+  debtPayment
   income
   investmentContribution
   market

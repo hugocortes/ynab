@@ -1,6 +1,11 @@
 import { Timestamp } from "./common.js";
 
-export const capitalAccountType = ["cash", "investment"] as const;
+export const capitalAccountType = [
+  "asset",
+  "cash",
+  "debt",
+  "investment",
+] as const;
 /**
  * @api
  */
