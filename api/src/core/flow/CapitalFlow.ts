@@ -77,6 +77,8 @@ export class CapitalAccountFlow {
         ];
         const isDebtAccount = debtAccountTypes.includes(account.type);
 
+        const isCreditCardAccount = account.type === "creditCard";
+
         const payload = {
           externalId: this.toCapitalAccountExternalId(budget.id, account.id),
           name: account.name,
@@ -88,7 +90,9 @@ export class CapitalAccountFlow {
                 ? ("debt" as const)
                 : isInvestmentAccount
                   ? ("investment" as const)
-                  : undefined,
+                  : isCreditCardAccount
+                    ? ("credit" as const)
+                    : undefined,
         };
         if (!payload.type) {
           return;
@@ -138,11 +142,96 @@ export class CapitalAccountFlow {
               date: middleOfDay,
               capitalAccountId,
               type: isContribution
-                ? ("investmentContribution" as const)
+                ? ("transfer" as const)
                 : ("market" as const),
             };
 
             await this.capitalAccountFlowHistoryRepo.create(payload);
+          })
+        );
+      },
+      {
+        concurrency: 5,
+      }
+    );
+  }
+
+  async createCapitalAccountCashHistory() {
+    const cashAccounts = await this.capitalAccountRepo.find({
+      pagination: {},
+      query: {
+        type: "cash",
+      },
+    });
+
+    const grossAccounts = cashAccounts.filter((account) =>
+      account.name.includes("gross income")
+    );
+    await bb.Promise.map(
+      grossAccounts,
+      async (grossAccount) => {
+        //
+      },
+      {
+        concurrency: 5,
+      }
+    );
+    return;
+
+    await bb.Promise.map(
+      cashAccounts,
+      async (cashAccount) => {
+        const { externalId, capitalAccountId, name } = cashAccount;
+
+        const isValidAccount = name.includes("✅");
+        if (!isValidAccount) {
+          return;
+        }
+
+        const { budgetId, accountId } = this.toBudgetIdentifiers(externalId);
+
+        const transactions = await this.ynabSdk.getTransactionsForAccount(
+          budgetId,
+          accountId
+        );
+
+        await Promise.all(
+          transactions.transactions.map(async (transaction, idx) => {
+            const transactionDate = new Date(transaction.date);
+            const middleOfDay = addHours(transactionDate, 12);
+
+            const isInterest = transaction.payee_name?.includes("Interest");
+            const isTransfer =
+              transaction.payee_name?.startsWith("Transfer") ||
+              transaction.payee_name === "Starting Balance";
+            const isIncome =
+              transaction.category_name === "Inflow: Ready to Assign" &&
+              !isInterest;
+            const isTransaction =
+              !!transaction.category_id && !isIncome && !isInterest;
+
+            const payload = {
+              amount: transaction.amount / 1000,
+              date: middleOfDay,
+              capitalAccountId,
+              type: isInterest
+                ? ("interest" as const)
+                : isTransfer
+                  ? ("transfer" as const)
+                  : isIncome
+                    ? ("income" as const)
+                    : isTransaction
+                      ? ("transaction" as const)
+                      : undefined,
+            };
+            if (!payload.type) {
+              return;
+            }
+
+            return this.capitalAccountFlowHistoryRepo.create({
+              ...payload,
+              type: payload.type,
+            });
           })
         );
       },

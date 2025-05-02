@@ -52,6 +52,7 @@ model CapitalAccountFlowHistory {
 enum enum_CapitalAccount_type {
   asset
   cash
+  credit
   debt
   investment
 }
@@ -64,7 +65,8 @@ enum enum_CapitalAccountFlowHistory_type {
   debt
   debtPayment
   income
-  investmentContribution
+  interest
   market
   transaction
+  transfer
 }

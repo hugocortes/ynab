@@ -5,9 +5,10 @@ export const capitalAccountFlowHistoryType = [
   "debt", // can be initial debt, debt adjustment, or debt interest
   "debtPayment",
   "income",
-  "investmentContribution",
+  "interest",
   "market",
   "transaction",
+  "transfer",
 ] as const;
 /**
  * @api

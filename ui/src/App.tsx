@@ -63,7 +63,7 @@ const netWorthQuery = {
   dimensions: ["CapitalAccount.type"],
 };
 
-const balanceQuery = {
+const investmentBalanceQuery = {
   measures: ["CapitalFlow.balance"],
   timeDimensions: [
     {
@@ -74,6 +74,24 @@ const balanceQuery = {
   filters: [
     {
       values: ["investment"],
+      member: "CapitalAccount.type",
+      operator: "equals" as const,
+    },
+  ],
+  dimensions: ["CapitalAccount.name"],
+};
+
+const cashBalanceQuery = {
+  measures: ["CapitalFlow.balance"],
+  timeDimensions: [
+    {
+      dimension: "CapitalFlow.date",
+      ...dateRangeDefault,
+    },
+  ],
+  filters: [
+    {
+      values: ["cash"],
       member: "CapitalAccount.type",
       operator: "equals" as const,
     },
@@ -187,22 +205,31 @@ function App() {
       <div>----</div>
       <div>----</div>
       <QueryRenderer
-        query={[balanceQuery, netWorthQuery]}
+        query={[investmentBalanceQuery, cashBalanceQuery, netWorthQuery]}
         cubeApi={cube}
         render={({ resultSet }) => {
           if (!resultSet) {
             return "Loading Analytics...";
           }
 
-          const [balanceBreakdown, netWorthBreakdown] = resultSet.decompose();
+          const [balanceBreakdown, cashBreakdown, netWorthBreakdown] =
+            resultSet.decompose();
           const balanceSet = balanceBreakdown.rawData();
+          const cashSet = cashBreakdown.rawData();
           const netWorthSet = netWorthBreakdown.rawData();
 
-          const { data, orderedNames } = getMonthAmountRollup(
+          const { data, orderedNames: investmentNames } = getMonthAmountRollup(
             balanceSet,
             "CapitalAccount.name",
             "CapitalFlow.balance"
           );
+
+          const { data: cashData, orderedNames: cashNames } =
+            getMonthAmountRollup(
+              cashSet,
+              "CapitalAccount.name",
+              "CapitalFlow.balance"
+            );
 
           const { data: netWorthData, orderedNames: netWorthNames } =
             getMonthAmountRollup(
@@ -216,6 +243,9 @@ function App() {
               const netWorthRow = netWorthData[key];
               const { columns, month, ...rest } = netWorthRow;
 
+              const cashRow = cashData[key];
+              const { columns: cashColumns, ...restCash } = cashRow;
+
               const { columns: rowColumns, ...restRow } = row;
 
               const netWorthTotal = netWorthNames.reduce(
@@ -225,19 +255,21 @@ function App() {
 
               return {
                 ...rest,
+                ...restCash,
                 ...restRow,
                 netWorthTotal,
               };
             }
           );
+          const orderedNames = [...cashNames, ...investmentNames];
 
           const allocationData = [...mergedDataSet].map((row) => {
             const clonedRow = { ...row };
             orderedNames.forEach((name) => {
               const column = clonedRow[name];
 
-              clonedRow[name] = roundToHundredth(
-                (column / row.investment) * 100
+              clonedRow[name] = Math.round(
+                roundToHundredth((column / (row.investment + row.cash)) * 100)
               );
             });
             return clonedRow;
@@ -287,7 +319,11 @@ function App() {
                 />
                 <Legend verticalAlign="bottom" height={36} />
               </ComposedChart>
+
               <br />
+              <br />
+              <br />
+
               <AreaChart
                 width={1500}
                 height={750}
@@ -314,11 +350,13 @@ function App() {
           );
         }}
       />
-      <div>----</div>
-      <div>----</div>
-      <div>----</div>
+
+      <br />
+      <br />
+      <br />
+
       <QueryRenderer
-        query={balanceQuery}
+        query={cashBalanceQuery}
         cubeApi={cube}
         render={({ resultSet }) => {
           if (!resultSet) {
@@ -326,11 +364,80 @@ function App() {
           }
 
           const rawSet = resultSet.rawData();
-          const { data, orderedNames } = getMonthAmountRollup(
+          const { data: ascData, orderedNames } = getMonthAmountRollup(
             rawSet,
             "CapitalAccount.name",
             "CapitalFlow.balance"
           );
+          const data = Object.values(ascData).reverse();
+
+          return (
+            <Paper sx={{ width: "100%", overflow: "hidden" }}>
+              <TableContainer sx={{ maxHeight: 750 }}>
+                <Table stickyHeader aria-label="sticky table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell align="center" colSpan={18}>
+                        Cash Balances
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell key="Month">Month</TableCell>
+                      {Array.from(orderedNames).map((name) => (
+                        <TableCell key={name}>{name}</TableCell>
+                      ))}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {data.map((row: any, idx) => {
+                      return (
+                        <TableRow hover key={idx}>
+                          <TableCell key={row.month}>
+                            {formatDate(row.month)}
+                          </TableCell>
+
+                          {orderedNames.map((name) => {
+                            const column = row.columns.find(
+                              (balance: any) =>
+                                balance["CapitalAccount.name"] === name
+                            );
+
+                            return (
+                              <TableCell key={name}>
+                                {currencyFormatter(
+                                  column["CapitalFlow.balance"]
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Paper>
+          );
+        }}
+      />
+      <div>----</div>
+      <div>----</div>
+      <div>----</div>
+      <QueryRenderer
+        query={investmentBalanceQuery}
+        cubeApi={cube}
+        render={({ resultSet }) => {
+          if (!resultSet) {
+            return "Loading Analytics...";
+          }
+
+          const rawSet = resultSet.rawData();
+          const { data: ascData, orderedNames } = getMonthAmountRollup(
+            rawSet,
+            "CapitalAccount.name",
+            "CapitalFlow.balance"
+          );
+          const data = Object.values(ascData).reverse();
 
           return (
             <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -350,7 +457,7 @@ function App() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.values(data).map((row: any, idx) => {
+                    {data.map((row: any, idx) => {
                       return (
                         <TableRow hover key={idx}>
                           <TableCell key={row.month}>
@@ -397,11 +504,13 @@ function App() {
           }
 
           const rawSet = resultSet.rawData();
-          const { data, orderedNames } = getMonthAmountRollup(
+          const { data: ascData, orderedNames } = getMonthAmountRollup(
             rawSet,
             "CapitalAccount.name",
             "CapitalFlow.monthAmount"
           );
+          const data = Object.values(ascData).reverse();
+          const first = Object.values(data)[0];
 
           return (
             <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -409,7 +518,10 @@ function App() {
                 <Table stickyHeader aria-label="sticky table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align="center" colSpan={18}>
+                      <TableCell
+                        align="center"
+                        colSpan={Object.keys(first as any).length}
+                      >
                         Debt Balance
                       </TableCell>
                     </TableRow>
@@ -421,7 +533,7 @@ function App() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.values(data).map((row: any, idx) => {
+                    {data.map((row: any, idx) => {
                       return (
                         <TableRow hover key={idx}>
                           <TableCell key={row.month}>
@@ -430,8 +542,8 @@ function App() {
 
                           {orderedNames.map((name) => {
                             const column = row.columns.find(
-                              (contribution: any) =>
-                                contribution["CapitalAccount.name"] === name
+                              (column: any) =>
+                                column["CapitalAccount.name"] === name
                             );
 
                             return (
@@ -467,14 +579,41 @@ function App() {
           ],
           filters: [
             {
-              values: ["investment"],
-              member: "CapitalAccount.type",
-              operator: "equals",
-            },
-            {
-              values: ["investmentContribution"],
-              member: "CapitalFlow.type",
-              operator: "equals",
+              or: [
+                {
+                  and: [
+                    {
+                      values: ["investment"],
+                      member: "CapitalAccount.type",
+                      operator: "equals",
+                    },
+                    {
+                      values: ["transfer"],
+                      member: "CapitalFlow.type",
+                      operator: "equals",
+                    },
+                  ],
+                },
+                {
+                  and: [
+                    {
+                      values: ["saving"],
+                      member: "CapitalAccount.name",
+                      operator: "contains",
+                    },
+                    {
+                      values: ["cash"],
+                      member: "CapitalAccount.type",
+                      operator: "equals",
+                    },
+                    {
+                      values: ["transfer"],
+                      member: "CapitalFlow.type",
+                      operator: "equals",
+                    },
+                  ],
+                },
+              ],
             },
           ],
           dimensions: ["CapitalAccount.name"],
@@ -486,11 +625,13 @@ function App() {
           }
 
           const rawSet = resultSet.rawData();
-          const { data, orderedNames } = getMonthAmountRollup(
+          const { data: ascData, orderedNames } = getMonthAmountRollup(
             rawSet,
             "CapitalAccount.name",
             "CapitalFlow.monthAmount"
           );
+          const data = Object.values(ascData).reverse();
+          const first = Object.values(data)[0];
 
           return (
             <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -498,8 +639,11 @@ function App() {
                 <Table stickyHeader aria-label="sticky table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align="center" colSpan={18}>
-                        Investment Contributions
+                      <TableCell
+                        align="center"
+                        colSpan={Object.keys(first as any).length}
+                      >
+                        Savings Contributions
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -510,7 +654,7 @@ function App() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.values(data).map((row: any, idx) => {
+                    {data.map((row: any, idx) => {
                       return (
                         <TableRow hover key={idx}>
                           <TableCell key={row.month}>
@@ -557,11 +701,13 @@ function App() {
           }
           const rawSet = resultSet.rawData();
 
-          const { data, orderedNames } = getMonthAmountRollup(
+          const { data: ascData, orderedNames } = getMonthAmountRollup(
             rawSet,
             "CapitalAccount.type",
             "CapitalFlow.balance"
           );
+          const data = Object.values(ascData).reverse();
+          const first = data[0];
 
           return (
             <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -569,7 +715,10 @@ function App() {
                 <Table stickyHeader aria-label="sticky table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align="center" colSpan={18}>
+                      <TableCell
+                        align="center"
+                        colSpan={Object.keys(first as any).length + 3}
+                      >
                         Net Worth Breakdown
                       </TableCell>
                     </TableRow>
@@ -584,7 +733,7 @@ function App() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.values(data).map((row: any, idx) => {
+                    {data.map((row: any, idx, self) => {
                       return (
                         <TableRow hover key={idx}>
                           <TableCell key={row.month}>
@@ -618,7 +767,7 @@ function App() {
                             </TableCell>
                           }
 
-                          {idx === 0 ? (
+                          {idx === self.length - 1 ? (
                             <TableCell key="delta">
                               {currencyFormatter(0)}
                             </TableCell>
@@ -631,7 +780,7 @@ function App() {
                                   0
                                 ) -
                                   (
-                                    Object.values(data)[idx - 1] as any
+                                    Object.values(data)[idx + 1] as any
                                   ).columns.reduce(
                                     (acc: number, row: any) =>
                                       acc + (row["CapitalFlow.balance"] || 0),
@@ -641,7 +790,7 @@ function App() {
                             </TableCell>
                           )}
 
-                          {idx === 0 ? (
+                          {idx === self.length - 1 ? (
                             <TableCell key="deltaPercent">0%</TableCell>
                           ) : (
                             <TableCell key="deltaPercent">
@@ -652,7 +801,7 @@ function App() {
                                   0
                                 ) -
                                   (
-                                    Object.values(data)[idx - 1] as any
+                                    Object.values(data)[idx + 1] as any
                                   ).columns.reduce(
                                     (acc: number, row: any) =>
                                       acc + (row["CapitalFlow.balance"] || 0),
@@ -682,39 +831,103 @@ function App() {
       <div>----</div>
       <div>----</div>
       <QueryRenderer
-        query={{
-          dimensions: ["CapitalAccount.name"],
-          filters: [
-            {
-              values: ["investment"],
-              member: "CapitalAccount.type",
-              operator: "equals",
-            },
-          ],
-          measures: [
-            "CapitalFlow.balance",
-            "CapitalFlow.investmentContribution",
-          ],
-          timeDimensions: [
-            {
-              dimension: "CapitalFlow.date",
-              granularity: "month",
-              dateRange: "from 12/2013 to now",
-            },
-          ],
-        }}
+        query={[
+          {
+            dimensions: ["CapitalAccount.name"],
+            filters: [
+              {
+                or: [
+                  {
+                    values: ["investment"],
+                    member: "CapitalAccount.type",
+                    operator: "equals",
+                  },
+                ],
+              },
+            ],
+            measures: ["CapitalFlow.balance", "CapitalFlow.contribution"],
+            timeDimensions: [
+              {
+                dimension: "CapitalFlow.date",
+                granularity: "month",
+                dateRange: "from 12/2013 to now",
+              },
+            ],
+          },
+          {
+            dimensions: ["CapitalAccount.name"],
+            filters: [
+              {
+                or: [
+                  {
+                    and: [
+                      {
+                        values: ["saving"],
+                        member: "CapitalAccount.name",
+                        operator: "contains",
+                      },
+                      {
+                        values: ["cash"],
+                        member: "CapitalAccount.type",
+                        operator: "equals",
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+            measures: ["CapitalFlow.interest"],
+            timeDimensions: [
+              {
+                dimension: "CapitalFlow.date",
+                granularity: "month",
+                dateRange: "from 12/2013 to now",
+              },
+            ],
+          },
+        ]}
         cubeApi={cube}
         render={({ resultSet }) => {
           if (!resultSet) {
             return "Loading Analytics...";
           }
 
-          const rawSet = resultSet.rawData();
-          const { data, orderedNames } = getMonthAmountRollup(
-            rawSet,
-            "CapitalAccount.name",
-            "CapitalFlow.balance"
+          const [investmentBreakdown, interestBreakdown] =
+            resultSet.decompose();
+
+          const investmentSet = investmentBreakdown.rawData();
+          const { data: ascInvestmentData, orderedNames: investmentNames } =
+            getMonthAmountRollup(
+              investmentSet,
+              "CapitalAccount.name",
+              "CapitalFlow.balance"
+            );
+
+          const interestSet = interestBreakdown.rawData();
+          const { data: ascInterestData, orderedNames: interestNames } =
+            getMonthAmountRollup(
+              interestSet,
+              "CapitalAccount.name",
+              "CapitalFlow.interest"
+            );
+
+          const mergedDataSet = Object.entries(ascInvestmentData).map(
+            ([key, row]: [any, any]) => {
+              const interestRow = ascInterestData[key];
+              const { columns, month, ...restInterest } = interestRow;
+
+              const { columns: rowColumns, ...restRow } = row;
+
+              return {
+                ...restInterest,
+                ...restRow,
+                columns: [...rowColumns, ...columns],
+              };
+            }
           );
+          const data = Object.values(mergedDataSet).reverse();
+          const first = data[0];
+          const orderedNames = [...investmentNames, ...interestNames];
 
           return (
             <Paper sx={{ width: "100%", overflow: "hidden" }}>
@@ -722,8 +935,11 @@ function App() {
                 <Table stickyHeader aria-label="sticky table">
                   <TableHead>
                     <TableRow>
-                      <TableCell align="center" colSpan={18}>
-                        Investment Gains
+                      <TableCell
+                        align="center"
+                        colSpan={Object.keys(first as any).length}
+                      >
+                        Savings Gains
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -735,7 +951,7 @@ function App() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {Object.values(data).map((row: any, idx) => {
+                    {data.map((row: any, idx) => {
                       return (
                         <TableRow hover key={idx}>
                           <TableCell key={row.month}>
@@ -744,19 +960,39 @@ function App() {
 
                           {orderedNames.map((name) => {
                             const column = row.columns.find(
-                              (contribution: any) =>
-                                contribution["CapitalAccount.name"] === name
+                              (column: any) =>
+                                column["CapitalAccount.name"] === name
                             );
+                            if (name.includes("saving")) {
+                              console.log(column);
+                            }
+
+                            if (!column) {
+                              return (
+                                <TableCell key={name}>
+                                  {currencyFormatter(0)}
+                                </TableCell>
+                              );
+                            }
+
+                            if (column["CapitalFlow.interest"]) {
+                              return (
+                                <TableCell key={name}>
+                                  {currencyFormatter(
+                                    column["CapitalFlow.interest"]
+                                  )}
+                                </TableCell>
+                              );
+                            }
 
                             return (
                               <TableCell key={name}>
                                 {column &&
-                                column["CapitalFlow.balance"] - 0.1 > 0
+                                column["CapitalFlow.balance"] - 0.001 > 0
                                   ? currencyFormatter(
                                       column["CapitalFlow.balance"] -
-                                        (column[
-                                          "CapitalFlow.investmentContribution"
-                                        ] || 0)
+                                        (column["CapitalFlow.contribution"] ||
+                                          0)
                                     )
                                   : currencyFormatter(0)}
                               </TableCell>
@@ -770,9 +1006,20 @@ function App() {
                                   return acc;
                                 }
 
-                                acc +=
-                                  (row["CapitalFlow.balance"] || 0) -
-                                  row["CapitalFlow.investmentContribution"];
+                                if (
+                                  Number.isFinite(row["CapitalFlow.interest"])
+                                ) {
+                                  return acc + row["CapitalFlow.interest"];
+                                }
+                                if (
+                                  Number.isFinite(row["CapitalFlow.balance"])
+                                ) {
+                                  return (
+                                    acc +
+                                    (row["CapitalFlow.balance"] || 0) -
+                                    row["CapitalFlow.contribution"]
+                                  );
+                                }
 
                                 return acc;
                               }, 0)

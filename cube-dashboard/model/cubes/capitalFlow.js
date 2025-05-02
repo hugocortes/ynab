@@ -20,12 +20,26 @@ cube("CapitalFlow", {
       format: "currency",
     },
 
-    investmentContribution: {
+    contribution: {
       sql: `"amount"`,
       type: "sum",
       filters: [
         {
-          sql: `${CapitalFlow}."type" = 'investmentContribution'`,
+          sql: `${CapitalFlow}."type" = 'transfer' OR ${CapitalFlow}."type" = 'income'`,
+        },
+      ],
+      rolling_window: {
+        trailing: "unbounded",
+        offset: "end",
+      },
+      format: "currency",
+    },
+    interest: {
+      sql: `"amount"`,
+      type: "sum",
+      filters: [
+        {
+          sql: `${CapitalFlow}."type" = 'interest'`,
         },
       ],
       rolling_window: {

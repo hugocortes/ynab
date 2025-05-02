@@ -3,6 +3,7 @@ import { Timestamp } from "./common.js";
 export const capitalAccountType = [
   "asset",
   "cash",
+  "credit",
   "debt",
   "investment",
 ] as const;

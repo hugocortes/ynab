@@ -14,6 +14,7 @@ import { CapitalAccountFlow } from "./core/index.js";
   await clazz.creteCapitalAccounts();
   await clazz.createCapitalAccountFlowHistory();
   await clazz.createCapitalAccountDebtHistory();
+  await clazz.createCapitalAccountCashHistory();
 
   return 0;
 })();
